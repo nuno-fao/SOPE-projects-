@@ -1,2 +1,2 @@
-simpledu: simpledu.c funcs.c
-     gcc -o simpledu simpledu.c funcs.c
+simpledu: simpledu.c funcs.c	
+gcc -o simpledu simpledu.c funcs.c
