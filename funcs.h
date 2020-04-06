@@ -18,8 +18,9 @@ struct FLAGS{
 	int maxDepth;
 	char* dir;
 };
+
 //reads flags and checks if they are valid or not
 bool readFlags(char **argv, int argc, struct FLAGS* flags);
 
 //will list files and directories in the directory in flags.dir
-int list(struct FLAGS* flags);
+int list(struct FLAGS* flags,char* path);
