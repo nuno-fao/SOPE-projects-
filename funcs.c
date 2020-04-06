@@ -1,6 +1,6 @@
 #include "funcs.h"
 
-bool invalidArgs(char **argv, int argc ){
+bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	char *link1 = "-l\0";
 	char *link2 = "--count-links\0";
 	char *all1 = "-a\0";
@@ -14,63 +14,73 @@ bool invalidArgs(char **argv, int argc ){
 	char *separate1 = "-S\0";
 	char *separate2 = "--separate-dirs\0";
 	char *max_depth = "--max-depth=";
-	//char *path = ".";
 
-	if(strncmp(link1,*(argv+1),3)!=0 && strncmp(link2,*(argv+1),13)!=0){
-		return true;
-	}
+	flags->all = flags->bytes = flags->dereference = flags->link = flags->separate=false;
+	flags->blockSize = flags->maxDepth = 0;
+	flags->dir = "";
 
-	for(char **arg=argv+3;*arg!=0;arg++){
+	for(char **arg=argv+1;*arg!=0;arg++){
 		char *thisarg=*arg;
-		if(strncmp(all1,thisarg,3)==0||strncmp(all2,thisarg,6)==0){
-			all=true;
+
+		//will check each flag and if it has been already used
+		if((strncmp(all1,thisarg,3)==0||strncmp(all2,thisarg,6)==0)&&flags->all==false){
+			flags->all=true;
 			continue;
 		}
-		else if(strncmp(bytes1,thisarg,3)==0||strncmp(bytes2,thisarg,8)==0){
-			bytes=true;
+		else if((strncmp(link1,thisarg,3)==0 || strncmp(link2,thisarg,14)==0) && flags->link==false){
+			flags->link=true;
 			continue;
 		}
-		else if(strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0){
+		else if((strncmp(bytes1,thisarg,3)==0||strncmp(bytes2,thisarg,8)==0)&&flags->bytes==false){
+			flags->bytes=true;
+			continue;
+		}
+		else if((strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0)&&flags->blockSize==false){
 			if(strncmp(block1,thisarg,3)==0){
 				arg++;
-				blockSize=atoi(*arg);
+				flags->blockSize=atoi(*arg);
 			}
 			else{
 				thisarg+=13;
-				blockSize=atoi(thisarg);
+				flags->blockSize=atoi(thisarg);
 			}
 			continue;
 		}
-		else if(strncmp(dereference1,thisarg,3)==0||strncmp(dereference2,thisarg,14)==0){
-			dereference=true;
+		else if((strncmp(dereference1,thisarg,3)==0||strncmp(dereference2,thisarg,14)==0)&&flags->dereference==false){
+			flags->dereference=true;
 			continue;
 		}
-		else if(strncmp(separate1,thisarg,3)==0||strncmp(separate2,thisarg,16)==0){
-			separate=true;
+		else if((strncmp(separate1,thisarg,3)==0||strncmp(separate2,thisarg,16)==0)&&flags->separate==false){
+			flags->separate=true;
 			continue;
 		}
-		else if(strncmp(max_depth,thisarg,12)==0){
+		else if((strncmp(max_depth,thisarg,12)==0)&&flags->maxDepth==0){
 			thisarg+=12;
-			maxDepth=atoi(thisarg);
+			flags->maxDepth=atoi(thisarg);
 			continue;
 		}
-		return true;
+		else if(strlen(flags->dir)==0){
+			flags->dir=thisarg;
+			continue;
+		}
+		return true;	//returns true if any input is wrong
 	}
 
-	return false;
+	if(flags->link==false) return true; //links is a must
+
+	return false; //read flags with no errors
 }
 
-int list(){
+int list(struct FLAGS* flags){
 	struct dirent* newFile;
 	struct stat statBuffer;
 
-    DIR* source_dir = opendir(".");
+    DIR* source_dir = opendir(flags->dir);
 
     if (source_dir == NULL) return -3;
 
     while ((newFile = readdir(source_dir)) != NULL){
 
-        // Lê informações para o statbuf
         if(stat(newFile->d_name, &statBuffer) == -1){
             printf("Could not read from %s",newFile->d_name);
             continue;
@@ -83,8 +93,6 @@ int list(){
 		else if(S_ISDIR(statBuffer.st_mode)){
             printf("Found directory with name %s\n",newFile->d_name);
 		}
-
-
     }
 
     closedir(source_dir);
