@@ -23,12 +23,10 @@ bool invalidArgs(char **argv, int argc ){
 		char *thisarg=*arg;
 		if(strncmp(all1,thisarg,3)==0||strncmp(all2,thisarg,6)==0){
 			all=true;
-			printf("check 1\n");
 			continue;
 		}
 		else if(strncmp(bytes1,thisarg,3)==0||strncmp(bytes2,thisarg,8)==0){
 			bytes=true;
-			printf("check 2\n");
 			continue;
 		}
 		else if(strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0){
@@ -44,12 +42,10 @@ bool invalidArgs(char **argv, int argc ){
 		}
 		else if(strncmp(dereference1,thisarg,3)==0||strncmp(dereference2,thisarg,14)==0){
 			dereference=true;
-			printf("check 3\n");
 			continue;
 		}
-		else if(strncmp(separate1,thisarg,3)==0||strncmp(dereference2,thisarg,16)==0){
+		else if(strncmp(separate1,thisarg,3)==0||strncmp(separate2,thisarg,16)==0){
 			separate=true;
-			printf("check 4\n");
 			continue;
 		}
 		else if(strncmp(max_depth,thisarg,12)==0){

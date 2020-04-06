@@ -21,5 +21,4 @@ int main(int argc, char **argv, char **envp)
   	printf("Bad arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n");
   	exit(2);
   }
-  printf("%i\n",maxDepth);
 }
