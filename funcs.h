@@ -7,14 +7,19 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-extern bool all;
-extern bool bytes;
-extern bool dereference;
-extern bool separate;
-extern int blockSize;
-extern int maxDepth;
-extern char* dir;
+struct FLAGS{
 
-bool invalidArgs(char **argv, int argc);
+	bool all;
+	bool bytes;
+	bool link;
+	bool dereference;
+	bool separate;
+	int blockSize;
+	int maxDepth;
+	char* dir;
+};
+//reads flags and checks if they are valid or not
+bool readFlags(char **argv, int argc, struct FLAGS* flags);
 
-int list();
+//will list files and directories in the directory in flags.dir
+int list(struct FLAGS* flags);
