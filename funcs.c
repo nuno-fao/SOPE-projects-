@@ -71,27 +71,36 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	return false; //read flags with no errors
 }
 
-int list(struct FLAGS* flags){
+int list(struct FLAGS* flags,char* path){
 	struct dirent* newFile;
 	struct stat statBuffer;
 
     DIR* source_dir = opendir(flags->dir);
 
-    if (source_dir == NULL) return -3;
+    if (source_dir == NULL) return -1;
 
     while ((newFile = readdir(source_dir)) != NULL){
 
         if(stat(newFile->d_name, &statBuffer) == -1){
-            printf("Could not read from %s",newFile->d_name);
+            printf("Could not read from %s\n",newFile->d_name);
             continue;
         }
 
+    	char fullPath[1024]="";
+    	strcat(fullPath,path);
+    	strcat(fullPath,"/");
+    	strcat(fullPath,newFile->d_name);
+
         if(S_ISREG(statBuffer.st_mode)){
-        	printf("%li\t%s\n",statBuffer.st_size,newFile->d_name);
+
+        	printf("%li\t%s\n",statBuffer.st_size,fullPath);
+
+
         }
 
 		else if(S_ISDIR(statBuffer.st_mode)){
-            printf("Found directory with name %s\n",newFile->d_name);
+
+        	printf("%li\t%s\n",statBuffer.st_size,fullPath); 	//isto é para sair, just testing
 		}
     }
 
