@@ -14,6 +14,7 @@ bool invalidArgs(char **argv, int argc ){
 	char *separate1 = "-S\0";
 	char *separate2 = "--separate-dirs\0";
 	char *max_depth = "--max-depth=";
+	//char *path = ".";
 
 	if(strncmp(link1,*(argv+1),3)!=0 && strncmp(link2,*(argv+1),13)!=0){
 		return true;
@@ -57,4 +58,35 @@ bool invalidArgs(char **argv, int argc ){
 	}
 
 	return false;
+}
+
+int list(){
+	struct dirent* newFile;
+	struct stat statBuffer;
+
+    DIR* source_dir = opendir(".");
+
+    if (source_dir == NULL) return -3;
+
+    while ((newFile = readdir(source_dir)) != NULL){
+
+        // Lê informações para o statbuf
+        if(stat(newFile->d_name, &statBuffer) == -1){
+            printf("Could not read from %s",newFile->d_name);
+            continue;
+        }
+
+        if(S_ISREG(statBuffer.st_mode)){
+        	printf("%li\t%s\n",statBuffer.st_size,newFile->d_name);
+        }
+
+		else if(S_ISDIR(statBuffer.st_mode)){
+            printf("Found directory with name %s\n",newFile->d_name);
+		}
+
+
+    }
+
+    closedir(source_dir);
+    return 0;
 }
