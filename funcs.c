@@ -122,14 +122,28 @@ int list(struct FLAGS* flags,char* path,int depth){
 			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0 || strcmp(newFile->d_name,".git")==0){
 				continue;
 			}
-			list(flags,fullPath,depth+1);
-			printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
-			fflush(stdout);
-        	 	
+			int pid;
+			pid=fork();
+			if(pid==0){
+				list(flags,fullPath,depth+1);
+				exit(0);
+			}
+			else if(pid>0){
+				waitpid(pid,NULL,0);
+				if(depth<flags->maxDepth){
+					printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
+					fflush(stdout);
+				}
+			}
+			else{
+				perror("Error forking");
+				return -1;
+			}	
 		}
     }
     if(depth==0){
     	printf("%-ld\t%s\n",statBuffer.st_size,path);
+    	fflush(stdout);
     }
     chdir("..");
     closedir(source_dir);
