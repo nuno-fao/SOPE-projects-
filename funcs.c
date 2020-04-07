@@ -35,7 +35,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 			flags->bytes=true;
 			continue;
 		}
-		else if((strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0)&&flags->blockSize==false){
+		else if((strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0)&&flags->blockSize==0){
 			if(strncmp(block1,thisarg,3)==0){
 				arg++;
 				flags->blockSize=atoi(*arg);
@@ -92,16 +92,28 @@ int list(struct FLAGS* flags,char* path){
     	strcat(fullPath,newFile->d_name);
 
         if(S_ISREG(statBuffer.st_mode)){
-
-        	printf("%li\t%s\n",statBuffer.st_size,fullPath);
-
+			if((flags->all==true)&&(flags->bytes==false)){
+				
+        		printf("%li\t%s\n",statBuffer.st_blocks,fullPath);
+			}
+			else if((flags->bytes==true)&&(flags->all==false)){
+				printf("%li\t%s\n",statBuffer.st_size,fullPath);
+			}
+			else if((flags->all==true)&&(flags->bytes==true)){
+				printf("%li\t%s\n",statBuffer.st_size,fullPath);
+			}
+			//else if(flags->dereference==true)
+			//else if(flags->link==true)
+			//else if(flags->separate==true)
+			
+			else printf("wrong"); //teste, a remover mais tarde
 
         }
 
-		else if(S_ISDIR(statBuffer.st_mode)){
+		//else if(S_ISDIR(statBuffer.st_mode)){
 
-        	printf("%li\t%s\n",statBuffer.st_size,fullPath); 	//isto é para sair, just testing
-		}
+        //	printf("%li\t%s\n",statBuffer.st_size,fullPath); 	//isto é para sair, just testing
+		//}
     }
 
     closedir(source_dir);
