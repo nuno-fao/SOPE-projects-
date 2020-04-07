@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <limits.h>
+#include <unistd.h>
 
 struct FLAGS{
 
@@ -23,4 +25,4 @@ struct FLAGS{
 bool readFlags(char **argv, int argc, struct FLAGS* flags);
 
 //will list files and directories in the directory in flags.dir
-int list(struct FLAGS* flags,char* path);
+int list(struct FLAGS* flags,char* path, int depth);
