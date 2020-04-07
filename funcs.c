@@ -95,13 +95,16 @@ int list(struct FLAGS* flags,char* path){
         if(S_ISREG(statBuffer.st_mode)){
 			if((flags->all==true)&&(flags->bytes==false)&&(flags->link==true)){
 				
-        		printf("%li\t%s\n",statBuffer.st_blocks,fullPath);
+        		printf("%-ld\t%s\n",statBuffer.st_blocks,fullPath);
+				fflush(stdout);
 			}
 			else if((flags->bytes==true)&&(flags->all==false)&&(flags->link==true)){
-				printf("%li\t%s\n",statBuffer.st_size,fullPath);
+				printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
+				fflush(stdout);
 			}
 			else if((flags->all==true)&&(flags->bytes==true)&&(flags->link==true)){
-				printf("%li\t%s\n",statBuffer.st_size,fullPath);
+				printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
+				fflush(stdout);
 			}
 			//else if(flags->dereference==true)
 			//else if(flags->separate==true)
