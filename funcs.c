@@ -91,19 +91,19 @@ int list(struct FLAGS* flags,char* path){
     	strcat(fullPath,"/");
     	strcat(fullPath,newFile->d_name);
 
+		//if(S_ISLNK(statBuffer.st_mode)){
         if(S_ISREG(statBuffer.st_mode)){
-			if((flags->all==true)&&(flags->bytes==false)){
+			if((flags->all==true)&&(flags->bytes==false)&&(flags->link==true)){
 				
         		printf("%li\t%s\n",statBuffer.st_blocks,fullPath);
 			}
-			else if((flags->bytes==true)&&(flags->all==false)){
+			else if((flags->bytes==true)&&(flags->all==false)&&(flags->link==true)){
 				printf("%li\t%s\n",statBuffer.st_size,fullPath);
 			}
-			else if((flags->all==true)&&(flags->bytes==true)){
+			else if((flags->all==true)&&(flags->bytes==true)&&(flags->link==true)){
 				printf("%li\t%s\n",statBuffer.st_size,fullPath);
 			}
 			//else if(flags->dereference==true)
-			//else if(flags->link==true)
 			//else if(flags->separate==true)
 			
 			else printf("wrong"); //teste, a remover mais tarde
