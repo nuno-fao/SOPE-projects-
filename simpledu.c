@@ -7,11 +7,14 @@
 #include <sys/wait.h>
 #include <string.h>
 #include "funcs.h"
+#include "registers.h"
 
 int main(int argc, char **argv, char **envp)
 {
   
   struct FLAGS flags;
+
+  writeRegisters();
 
   if(argc<3){
   	write(STDOUT_FILENO,"Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n",strlen("Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n"));
