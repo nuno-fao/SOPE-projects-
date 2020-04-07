@@ -16,7 +16,8 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	char *max_depth = "--max-depth=";
 
 	flags->all = flags->bytes = flags->dereference = flags->link = flags->separate=false;
-	flags->blockSize = flags->maxDepth = 0;
+	flags->blockSize = 1024;
+	flags->maxDepth = INT_MAX;
 	flags->dir = "";
 
 	for(char **arg=argv+1;*arg!=0;arg++){
@@ -71,7 +72,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	return false; //read flags with no errors
 }
 
-int list(struct FLAGS* flags,char* path){
+int list(struct FLAGS* flags,char* path,int depth){
 	struct dirent* newFile;
 	struct stat statBuffer;
 
@@ -79,10 +80,12 @@ int list(struct FLAGS* flags,char* path){
 
     if (source_dir == NULL) return -1;
 
+    chdir(flags->dir);
+
     while ((newFile = readdir(source_dir)) != NULL){
 
         if(stat(newFile->d_name, &statBuffer) == -1){
-            printf("Could not read from %s\n",newFile->d_name);
+            perror(newFile->d_name);
             continue;
         }
 
@@ -109,16 +112,26 @@ int list(struct FLAGS* flags,char* path){
 			//else if(flags->dereference==true)
 			//else if(flags->separate==true)
 			
-			else printf("wrong"); //teste, a remover mais tarde
+			//else printf("wrong"); //teste, a remover mais tarde
 
         }
 
-		//else if(S_ISDIR(statBuffer.st_mode)){
-
-        //	printf("%li\t%s\n",statBuffer.st_size,fullPath); 	//isto é para sair, just testing
-		//}
+		
+		else if(S_ISDIR(statBuffer.st_mode)){
+			flags->dir=newFile->d_name;
+			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0 || strcmp(newFile->d_name,".git")==0){
+				continue;
+			}
+			list(flags,fullPath,depth+1);
+			printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
+			fflush(stdout);
+        	 	
+		}
     }
-
+    if(depth==0){
+    	printf("%-ld\t%s\n",statBuffer.st_size,path);
+    }
+    chdir("..");
     closedir(source_dir);
     return 0;
 }
