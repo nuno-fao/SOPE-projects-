@@ -122,14 +122,22 @@ int list(struct FLAGS* flags,char* path,int depth){
 			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0 || strcmp(newFile->d_name,".git")==0){
 				continue;
 			}
-			int pid;
+			int pid, pd[2];
+			pipe(pd);
 			pid=fork();
 			if(pid==0){
 				list(flags,fullPath,depth+1);
+
+				close(pd[0]);//close reading end
+				//write(pd[1],0,sizeof(0));
+				close(pd[1]);//close writing end
 				exit(0);
 			}
 			else if(pid>0){
 				waitpid(pid,NULL,0);
+				close(pd[1]);//close reading end
+				//read(pd[0],0,sizeof(0));
+				close(pd[0]);//close writing end
 				if(depth<flags->maxDepth){
 					printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
 					fflush(stdout);
