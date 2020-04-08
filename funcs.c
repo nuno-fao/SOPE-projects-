@@ -28,7 +28,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 			flags->all=true;
 			continue;
 		}
-		else if((strncmp(link1,thisarg,3)==0 || strncmp(link2,thisarg,14)==0) && flags->link==false){
+		else if((strncmp(link1,thisarg,3)==0 || strncmp(link2,thisarg,14)==0)&&flags->link==false){
 			flags->link=true;
 			continue;
 		}
@@ -85,7 +85,7 @@ long int list(struct FLAGS* flags,char* path,int depth){
 
     while ((newFile = readdir(source_dir)) != NULL){
 
-        if(stat(newFile->d_name, &statBuffer) == -1){
+        if(lstat(newFile->d_name, &statBuffer) == -1){
             perror(newFile->d_name);
             continue;
         }
@@ -95,7 +95,8 @@ long int list(struct FLAGS* flags,char* path,int depth){
     	strcat(fullPath,"/");
     	strcat(fullPath,newFile->d_name);
 
-        if(S_ISREG(statBuffer.st_mode)){
+
+        if(S_ISREG(statBuffer.st_mode)){ 
 
 			long int fileSize=0;
 
@@ -108,6 +109,18 @@ long int list(struct FLAGS* flags,char* path,int depth){
 
         }
 
+		else if(S_ISLNK(statBuffer.st_mode)&&(flags->dereference==true)){ 
+
+			long int fileSize=0;
+
+			getSizeFlagged(&fileSize,flags,statBuffer);
+
+			if(flags->all && depth<flags->maxDepth){
+				printItem(fullPath,fileSize);
+			}
+			dirSize+=fileSize;
+
+        }
 		
 		else if(S_ISDIR(statBuffer.st_mode)){
 			
