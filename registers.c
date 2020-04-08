@@ -30,7 +30,7 @@ void writeCreateEvent(int argc, char *argv[]){
 
     char *info = malloc(sizeof(char)*256);
 
-    for (int i = 0; i <= argc; i++) {
+    for (int i = 0; i < argc - 1; i++) {
        strcat(info, argv[i]);
        strcat(info, " ");
     }
@@ -70,32 +70,32 @@ void writeSendSignalEvent(pid_t pid, int signal){
     
 }
 
-void writeRecvPipeEvent(char *receivedMessage){
+void writeRecvPipeEvent(long int receivedMessage){
 
     struct Register registo;
 
     structRegisterBegin(&registo);
 
-    fprintf(file, "%f - %ld - RECV_PIPE - %s\n", registo.instant, (long) registo.pid, receivedMessage);
+    fprintf(file, "%f - %ld - RECV_PIPE - %ld\n", registo.instant, (long) registo.pid, receivedMessage);
     
 }
 
-void writeSendPipeEvent(char *sentMessage){
+void writeSendPipeEvent(long int sentMessage){
 
     struct Register registo;
 
     structRegisterBegin(&registo);
 
-    fprintf(file, "%f - %ld - SEND_PIPE - %s\n", registo.instant, (long) registo.pid, sentMessage);
+    fprintf(file, "%f - %ld - SEND_PIPE - %ld\n", registo.instant, (long) registo.pid, sentMessage);
     
 }
 
-void writeEntryEvent(){
+void writeEntryEvent(long int bytes, char *path){
 
     struct Register registo;
 
     structRegisterBegin(&registo);
 
-    fprintf(file, "%f - %ld - SEND_PIPE - \n", registo.instant, (long) registo.pid); // Aqui not sure como
+    fprintf(file, "%f - %ld - ENTRY - %ld\t%s\n", registo.instant, (long) registo.pid, bytes, path); 
     
 }

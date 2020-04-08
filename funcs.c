@@ -1,4 +1,5 @@
 #include "funcs.h"
+#include "registers.h"
 
 bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	char *link1 = "-l\0";
@@ -141,9 +142,11 @@ long int list(struct FLAGS* flags,char* path,int depth){
 				subDirSize += list(flags,fullPath,depth+1);
 
 				close(pd[0]);//close reading end
+				writeSendPipeEvent(subDirSize);
 				write(pd[1],&subDirSize,sizeof(subDirSize));	//writes sub directory size to pipe so father can read
 				close(pd[1]);//close writing end
 
+				writeExitEvent(0);
 				exit(0);
 			}
 			else if(pid>0){
@@ -152,6 +155,7 @@ long int list(struct FLAGS* flags,char* path,int depth){
 				long int subDirSize=0;
 
 				close(pd[1]);//close writing end
+				writeRecvPipeEvent(subDirSize);
 				read(pd[0],&subDirSize,sizeof(subDirSize));	//read full sub directory size from child process
 				close(pd[0]);//close reading end
 
@@ -182,6 +186,7 @@ long int list(struct FLAGS* flags,char* path,int depth){
 
 void printItem(char* path, long int size){
 	printf("%-ld\t%s\n",size,path);
+	writeEntryEvent(size, path);
 	fflush(stdout);
 }
 

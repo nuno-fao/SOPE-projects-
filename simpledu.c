@@ -15,15 +15,18 @@ int main(int argc, char **argv, char **envp)
   struct FLAGS flags;
 
   initRegisters();
+  writeCreateEvent(argc, argv);
 
   if(argc<3){
   	write(STDOUT_FILENO,"Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n",strlen("Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n"));
-	  exit(1);  
+	  writeExitEvent(1);
+    exit(1);  
   }
 
   if(readFlags(argv,argc, &flags)){
   	write(STDOUT_FILENO,"Bad arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n",strlen("Bad arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n"));
-  	exit(2);
+  	writeExitEvent(2);
+    exit(2);
   }
 
   list(&flags, flags.dir,0);

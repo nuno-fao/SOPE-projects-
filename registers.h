@@ -20,8 +20,8 @@ void writeCreateEvent(int argc, char *argv[]);
 void writeExitEvent(int exitStatus);
 void writeRecvSignalEvent(int signal);
 void writeSendSignalEvent(pid_t pid, int signal);
-void writeRecvPipeEvent(char *receivedMessage);
-void writeSendPipeEvent(char *sentMessage);
+void writeRecvPipeEvent(long int receivedMessage);
+void writeSendPipeEvent(long int sentMessage);
 void writeEntryEvent();
 
 #endif /*REG_H*/
