@@ -6,7 +6,6 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <limits.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -26,4 +25,10 @@ struct FLAGS{
 bool readFlags(char **argv, int argc, struct FLAGS* flags);
 
 //will list files and directories in the directory in flags.dir
-int list(struct FLAGS* flags,char* path, int depth);
+long int list(struct FLAGS* flags,char* path, int depth);
+
+//will print an item and its size
+void printItem(char* path, long int size);
+
+//will add to the size variable the corresponding value in the statBuffer according to the flags
+void getSizeFlagged(long int *size,struct FLAGS* flags,struct stat statBuffer);
