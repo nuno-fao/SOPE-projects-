@@ -13,7 +13,7 @@ struct Register {
     double instant;
 };
 
-void writeRegisters();
+void initRegisters();
 void structRegisterBegin(struct Register *registo);
 
 void writeCreateEvent(int argc, char *argv[]);
