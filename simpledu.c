@@ -14,11 +14,11 @@ int main(int argc, char **argv, char **envp)
   
   struct FLAGS flags;
 
-  writeRegisters();
+  initRegisters();
 
   if(argc<3){
   	write(STDOUT_FILENO,"Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n",strlen("Insufficient arguments.\nUsage: simpledu -l [path] [-a] [-b] [-B size] [-L] [-S] [--max-depth=N]\nOrder isn't important\n"));
-	exit(1);  
+	  exit(1);  
   }
 
   if(readFlags(argv,argc, &flags)){

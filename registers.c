@@ -4,14 +4,14 @@ static clock_t cInstant;
 
 static FILE *file;
 
-void writeRegisters() {
+void initRegisters() {
     char *reg;
     cInstant = clock();
     
     setenv("LOG_FILENAME", "registers.txt",0);
     reg = getenv("LOG_FILENAME");
 
-    if((file = fopen(reg, "a")) == NULL){
+    if((file = fopen(reg, "w")) == NULL){
         perror("Could not open the set file\n");
         exit(1);
     }
