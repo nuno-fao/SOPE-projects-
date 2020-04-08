@@ -15,9 +15,9 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	char *separate2 = "--separate-dirs\0";
 	char *max_depth = "--max-depth=";
 
-	flags->all = flags->bytes = flags->dereference = flags->link = flags->separate=false;
-	flags->blockSize = 1024;
-	flags->maxDepth = INT_MAX;
+	flags->all = flags->bytes = flags->dereference = flags->link = flags->separate=false;	//default flag state
+	flags->blockSize = 1024;		//default block size
+	flags->maxDepth = 2147483647;	//maximum value for an int (just a big value so it will never be reached for the default value)
 	flags->dir = "";
 
 	for(char **arg=argv+1;*arg!=0;arg++){
@@ -36,7 +36,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 			flags->bytes=true;
 			continue;
 		}
-		else if((strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0)&&flags->blockSize==0){
+		else if((strncmp(block1,thisarg,3)==0||strncmp(block2,thisarg,13)==0)&&flags->blockSize==1024){
 			if(strncmp(block1,thisarg,3)==0){
 				arg++;
 				flags->blockSize=atoi(*arg);
@@ -55,7 +55,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 			flags->separate=true;
 			continue;
 		}
-		else if((strncmp(max_depth,thisarg,12)==0)&&flags->maxDepth==0){
+		else if((strncmp(max_depth,thisarg,12)==0)&&flags->maxDepth==2147483647){
 			thisarg+=12;
 			flags->maxDepth=atoi(thisarg);
 			continue;
@@ -72,9 +72,10 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	return false; //read flags with no errors
 }
 
-int list(struct FLAGS* flags,char* path,int depth){
+long int list(struct FLAGS* flags,char* path,int depth){
 	struct dirent* newFile;
 	struct stat statBuffer;
+	long int dirSize=0;
 
     DIR* source_dir = opendir(flags->dir);
 
@@ -89,58 +90,66 @@ int list(struct FLAGS* flags,char* path,int depth){
             continue;
         }
 
-    	char fullPath[1024]="";
+    	char fullPath[ 4096 ]="";	//max path length for linux (not sure, I just googled)
     	strcat(fullPath,path);
     	strcat(fullPath,"/");
     	strcat(fullPath,newFile->d_name);
 
-		//if(S_ISLNK(statBuffer.st_mode)){
         if(S_ISREG(statBuffer.st_mode)){
-			if((flags->all==true)&&(flags->bytes==false)&&(flags->link==true)){
-				
-        		printf("%-ld\t%s\n",statBuffer.st_blocks,fullPath);
-				fflush(stdout);
+
+			long int fileSize=0;
+
+			getSizeFlagged(&fileSize,flags,statBuffer);
+
+			if(flags->all && depth<flags->maxDepth){
+				printItem(fullPath,fileSize);
 			}
-			else if((flags->bytes==true)&&(flags->all==false)&&(flags->link==true)){
-				printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
-				fflush(stdout);
-			}
-			else if((flags->all==true)&&(flags->bytes==true)&&(flags->link==true)){
-				printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
-				fflush(stdout);
-			}
-			//else if(flags->dereference==true)
-			//else if(flags->separate==true)
-			
-			//else printf("wrong"); //teste, a remover mais tarde
+			dirSize+=fileSize;
 
         }
 
 		
 		else if(S_ISDIR(statBuffer.st_mode)){
-			flags->dir=newFile->d_name;
+			
 			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0 || strcmp(newFile->d_name,".git")==0){
 				continue;
 			}
+
 			int pid, pd[2];
+
+			flags->dir=newFile->d_name;
+
 			pipe(pd);
+
 			pid=fork();
 			if(pid==0){
-				list(flags,fullPath,depth+1);
+				long int subDirSize=0;
+
+				subDirSize += list(flags,fullPath,depth+1);
 
 				close(pd[0]);//close reading end
-				//write(pd[1],0,sizeof(0));
+				write(pd[1],&subDirSize,sizeof(subDirSize));	//writes sub directory size to pipe so father can read
 				close(pd[1]);//close writing end
+
 				exit(0);
 			}
 			else if(pid>0){
 				waitpid(pid,NULL,0);
-				close(pd[1]);//close reading end
-				//read(pd[0],0,sizeof(0));
-				close(pd[0]);//close writing end
+
+				long int subDirSize=0;
+
+				close(pd[1]);//close writing end
+				read(pd[0],&subDirSize,sizeof(subDirSize));	//read full sub directory size from child process
+				close(pd[0]);//close reading end
+
+				getSizeFlagged(&subDirSize,flags,statBuffer);
+
 				if(depth<flags->maxDepth){
-					printf("%-ld\t%s\n",statBuffer.st_size,fullPath);
-					fflush(stdout);
+					printItem(fullPath,subDirSize);
+				}
+
+				if(!flags->separate){	//add sub directory size to main directory if separate flag not active
+					dirSize+=subDirSize;
 				}
 			}
 			else{
@@ -149,11 +158,25 @@ int list(struct FLAGS* flags,char* path,int depth){
 			}	
 		}
     }
-    if(depth==0){
-    	printf("%-ld\t%s\n",statBuffer.st_size,path);
-    	fflush(stdout);
+    if(depth==0){	//print main directory size
+    	getSizeFlagged(&dirSize,flags,statBuffer);
+    	printItem(path,dirSize);
     }
-    chdir("..");
+    chdir("..");	//since we changed directory in the beggining we must go back
     closedir(source_dir);
-    return 0;
+    return dirSize;
+}
+
+void printItem(char* path, long int size){
+	printf("%-ld\t%s\n",size,path);
+	fflush(stdout);
+}
+
+void getSizeFlagged(long int *size,struct FLAGS* flags,struct stat statBuffer){
+	if(flags->bytes){
+		(*size)+=statBuffer.st_size;
+	}
+	else{
+		(*size)+=(statBuffer.st_blocks*512)/flags->blockSize;
+	}
 }
