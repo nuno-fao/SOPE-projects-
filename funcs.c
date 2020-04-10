@@ -105,7 +105,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	return false; //read flags with no errors
 }
 
-long int list(struct FLAGS* flags,char* path,int depth){
+long int du(struct FLAGS* flags,char* path,int depth){
 	struct dirent* newFile;
 	struct stat statBuffer;
 	long int dirSize=0;
