@@ -22,8 +22,6 @@ void sigint_handler(int sig) {
           writeSendSignalEvent(target, SIGTERM);
 		  kill(target, SIGTERM);
 		  fflush(stdout);
-		  writeSendSignalEvent(target, SIGINT);
-		  kill(target, SIGINT);
 		  exit(0);
           }
           else {
