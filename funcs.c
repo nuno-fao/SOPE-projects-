@@ -7,14 +7,16 @@ void sigint_handler(int sig) {
     int target = getppid();
      char  c;
 	writeSendSignalEvent(target, SIGSTOP);
-	kill(target, SIGSTOP);
+	
      signal(sig, SIG_IGN);
+	 kill(target, SIGSTOP);
 	 
 
      printf("\nSIGINT activado\n"
             "Deseja mesmo encerrar? [S/N] ");
      c = getchar();
      if (c == 'S' || c == 's'){
+		signal(sig, SIG_DFL);
 		  writeSendSignalEvent(target, SIGCONT);
 		  kill(target, SIGCONT);
           writeSendSignalEvent(target, SIGTERM);
@@ -22,6 +24,7 @@ void sigint_handler(int sig) {
 		  fflush(stdout);
 		  writeSendSignalEvent(target, SIGINT);
 		  kill(target, SIGINT);
+		  exit(0);
           }
           else {
 			writeSendSignalEvent(target, SIGCONT);  
