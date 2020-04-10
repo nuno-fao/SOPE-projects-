@@ -28,6 +28,9 @@ void sigint_handler(int sig) {
             kill(target, SIGCONT);
 			fflush(stdout);
           }
+
+		  signal(sig, SIG_DFL);
+
 }
 
 bool readFlags(char **argv, int argc, struct FLAGS* flags){
