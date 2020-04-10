@@ -26,7 +26,7 @@ struct FLAGS{
 bool readFlags(char **argv, int argc, struct FLAGS* flags);
 
 //will list files and directories in the directory in flags.dir
-long int list(struct FLAGS* flags,char* path, int depth);
+long int du(struct FLAGS* flags,char* path, int depth);
 
 //will print an item and its size
 void printItem(char* path, long int size);

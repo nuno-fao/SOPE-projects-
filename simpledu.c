@@ -35,10 +35,10 @@ int main(int argc, char **argv, char **envp)
     exit(2);
   }
 
-  list(&flags, flags.dir,0);
-
-
-
+  if(du(&flags, flags.dir,0)<0){
+    exit(3);
+  }
+  
   return 0;
   
 }
