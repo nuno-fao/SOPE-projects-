@@ -3,18 +3,24 @@
 
 void sigint_handler(int sig) {
 
+	writeRecvSignalEvent(sig);
     int target = getppid();
+	//kill(target, SIGSTOP);
      char  c;
 
      signal(sig, SIG_IGN);
+	 
+
      printf("\nSIGINT activado\n"
             "Deseja mesmo encerrar? [S/N] ");
      c = getchar();
      if (c == 'S' || c == 's'){
+		  writeSendSignalEvent(target, SIGTERM);
           kill(target, SIGTERM);
           exit(0);
           }
           else {
+			writeSendSignalEvent(target, SIGCONT);  
             kill(target, SIGCONT);
           }
 }
@@ -205,6 +211,7 @@ long int list(struct FLAGS* flags,char* path,int depth){
 void printItem(char* path, long int size){
 	printf("%-ld\t%s\n",size,path);
 	writeEntryEvent(size, path);
+	sleep(3);
 	fflush(stdout);
 }
 
