@@ -6,7 +6,8 @@ void sigint_handler(int sig) {
 	writeRecvSignalEvent(sig);
     int target = getppid();
      char  c;
-
+	writeSendSignalEvent(target, SIGSTOP);
+	kill(target, SIGSTOP);
      signal(sig, SIG_IGN);
 	 
 
@@ -14,13 +15,17 @@ void sigint_handler(int sig) {
             "Deseja mesmo encerrar? [S/N] ");
      c = getchar();
      if (c == 'S' || c == 's'){
-		  writeSendSignalEvent(target, SIGTERM);
-          kill(target, SIGTERM);
+		  writeSendSignalEvent(target, SIGCONT);
+		  kill(target, SIGCONT);
+          writeSendSignalEvent(target, SIGTERM);
+		  kill(target, SIGTERM);
+		  fflush(stdout);
           exit(0);
           }
           else {
 			writeSendSignalEvent(target, SIGCONT);  
             kill(target, SIGCONT);
+			fflush(stdout);
           }
 }
 
