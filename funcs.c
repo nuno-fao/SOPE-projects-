@@ -13,7 +13,8 @@ void sigint_handler(int sig) {
 	 
 
      printf("\nSIGINT activado\n"
-            "Deseja mesmo encerrar? [S/N] ");
+            "Deseja mesmo encerrar?\n"
+			"Escreva s ou S para encerrar, qualquer outra tecla para continuar.\n");
      c = getchar();
      if (c == 'S' || c == 's'){
 		signal(sig, SIG_DFL);
