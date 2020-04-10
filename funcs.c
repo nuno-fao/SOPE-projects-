@@ -118,9 +118,11 @@ long int list(struct FLAGS* flags,char* path,int depth){
 
     while ((newFile = readdir(source_dir)) != NULL){
 
-        if(lstat(newFile->d_name, &statBuffer) == -1){
-            perror(newFile->d_name);
-            continue;
+        if(flags->dereference ){
+        	stat(newFile->d_name, &statBuffer);
+        }
+        else {
+        	lstat(newFile->d_name, &statBuffer);
         }
 
     	char fullPath[ 4096 ]="";	//max path length for linux (not sure, I just googled)
@@ -142,7 +144,7 @@ long int list(struct FLAGS* flags,char* path,int depth){
 
         }
 
-		else if(S_ISLNK(statBuffer.st_mode)&&(flags->dereference==true)){ 
+		else if(S_ISLNK(statBuffer.st_mode)&&(flags->dereference==false)){ 
 
 			long int fileSize=0;
 
