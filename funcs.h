@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 struct FLAGS{
 
@@ -32,3 +33,6 @@ void printItem(char* path, long int size);
 
 //will add to the size variable the corresponding value in the statBuffer according to the flags
 void getSizeFlagged(long int *size,struct FLAGS* flags,struct stat statBuffer);
+
+//handles SIGINT signal, asks the user for confirmation
+void sigint_handler(int sig); 
