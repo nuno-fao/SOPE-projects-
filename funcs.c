@@ -162,7 +162,7 @@ long int du(struct FLAGS* flags,char* path,int depth){
 		
 		else if(S_ISDIR(statBuffer.st_mode)){
 			
-			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0 || strcmp(newFile->d_name,".git")==0){
+			if(strcmp(newFile->d_name,".")==0||strcmp(newFile->d_name,"..")==0){
 				continue;
 			}
 
@@ -176,7 +176,7 @@ long int du(struct FLAGS* flags,char* path,int depth){
 			if(pid==0){
 				long int subDirSize=0;
 
-				subDirSize += list(flags,fullPath,depth+1);
+				subDirSize += du(flags,fullPath,depth+1);
 
 				close(pd[0]);//close reading end
 				writeSendPipeEvent(subDirSize);
