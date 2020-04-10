@@ -1,6 +1,24 @@
 #include "funcs.h"
 #include "registers.h"
 
+void sigint_handler(int sig) {
+
+    int target = getppid();
+     char  c;
+
+     signal(sig, SIG_IGN);
+     printf("\nSIGINT activado\n"
+            "Deseja mesmo encerrar? [S/N] ");
+     c = getchar();
+     if (c == 'S' || c == 's'){
+          kill(target, SIGTERM);
+          exit(0);
+          }
+          else {
+            kill(target, SIGCONT);
+          }
+}
+
 bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	char *link1 = "-l\0";
 	char *link2 = "--count-links\0";

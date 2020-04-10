@@ -9,10 +9,16 @@
 #include "funcs.h"
 #include "registers.h"
 
+
 int main(int argc, char **argv, char **envp)
 {
-  
   struct FLAGS flags;
+  
+  struct sigaction action;
+  action.sa_handler = sigint_handler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+  sigaction(SIGINT,&action,NULL);
 
   initRegisters();
   writeCreateEvent(argc, argv);
@@ -30,6 +36,7 @@ int main(int argc, char **argv, char **envp)
   }
 
   list(&flags, flags.dir,0);
+
 
 
   return 0;
