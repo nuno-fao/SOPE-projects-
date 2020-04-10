@@ -224,7 +224,6 @@ long int list(struct FLAGS* flags,char* path,int depth){
 void printItem(char* path, long int size){
 	printf("%-ld\t%s\n",size,path);
 	writeEntryEvent(size, path);
-	sleep(3);
 	fflush(stdout);
 }
 
