@@ -62,3 +62,8 @@ void printFlags(struct FLAGS* flags){
 	printf("nthreads = %i\n",flags->nthreads);
 	printf("fifoname = %s\n",flags->fifoname);
 }
+
+double elapsedTime(time_t *start, time_t *now){
+	time(now);
+	return difftime(*now,*start);
+}

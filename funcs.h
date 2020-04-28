@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 
 struct FLAGS{
 	int nsecs;
@@ -17,7 +18,8 @@ struct FLAGS{
 	char* fifoname;
 };
 
-//reads flags and checks if they are valid or not
-bool readFlags(char **argv, int argc, struct FLAGS* flags);
+bool readFlags(char **argv, int argc, struct FLAGS* flags);	//reads flags and checks if they are valid or not
 
-void printFlags(struct FLAGS* flags);
+void printFlags(struct FLAGS* flags);	//debug purposes
+
+double elapsedTime(time_t *start, time_t *now);	//start must have a value and now will be overwritten 
