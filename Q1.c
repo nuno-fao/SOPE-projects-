@@ -8,7 +8,10 @@
 
 void *threadFunction(void *arg){
 
-
+  char * request = (char *) arg;
+  pid_t pid;
+  int i, tid, dur, pl;
+  sscanf(request,"[%d, %d, %d, %d, %d]",&i, &pid, &tid, &dur, &pl);
 
 	return NULL;
 }
@@ -34,18 +37,19 @@ int main(int argc, char **argv, char **envp)
 
   time(&startTime);	//initiate time counting
 
- while ( elapsedTime(&startTime,&execTime) < flags.nsecs ) {
- 	while (read(fd, &request, 256) <= 0) {
-            usleep(10000);
-            if(elapsedTime(&startTime,&execTime) < flags.nsecs){
-            	close(fd);
-            	unlink(flags.fifoname);
-            	return 0;
-            }
-    }
-    pthread_t tid;
-    pthread_create(&tid,NULL,threadFunction,&request);
- }
+
+  while ( elapsedTime(&startTime,&execTime) < flags.nsecs ) {
+  	while (read(fd, &request, 256) <= 0) {
+      	usleep(10000);
+  	    if(elapsedTime(&startTime,&execTime) > flags.nsecs){
+  	    	close(fd);
+  	    	unlink(flags.fifoname);
+  	    	return 0;
+  	    }
+  	}
+  	pthread_t tid;
+  	pthread_create(&tid,NULL,threadFunction,&request);
+  }
 
   close(fd);
   unlink(flags.fifoname);
