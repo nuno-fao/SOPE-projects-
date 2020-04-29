@@ -42,10 +42,7 @@ int main(int argc, char **argv, char **envp)
   clock_t startTime, execTime;
   char request[256];
   int fd;
-<<<<<<< HEAD
   bool running = true;
-=======
->>>>>>> 8707f3ac09f0ca1190e034a5205cdbab77092fd7
 
   if(readFlags(argv,argc, &flags)){		//reads arguments passed on function call
   	write(STDOUT_FILENO,"Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n",strlen("Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n"));
@@ -66,7 +63,6 @@ int main(int argc, char **argv, char **envp)
   	while (read(fd, &request, 256) <= 0) {
       	usleep(10000);
   	    if(elapsedTime(&startTime,&execTime) > flags.nsecs){
-<<<<<<< HEAD
           running = false;
           break;
   	    }
@@ -74,13 +70,6 @@ int main(int argc, char **argv, char **envp)
     if(!running){
       break;
     }
-=======
-  	    	close(fd);
-  	    	unlink(flags.fifoname);
-  	    	return 0;
-  	    }
-  	}
->>>>>>> 8707f3ac09f0ca1190e034a5205cdbab77092fd7
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,&request);
   }
