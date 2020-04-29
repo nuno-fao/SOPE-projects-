@@ -18,6 +18,14 @@ struct FLAGS{
 	char* fifoname;
 };
 
+struct Reply{
+	int i;
+	pid_t pid;
+	int tid;
+	int dur;
+	int pl;
+}
+
 bool readFlags(char **argv, int argc, struct FLAGS* flags);	//reads flags and checks if they are valid or not
 
 void printFlags(struct FLAGS* flags);	//debug purposes
