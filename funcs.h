@@ -18,6 +18,7 @@ struct FLAGS{
 	char* fifoname;
 };
 
+
 struct Reply{
 	int i;
 	pid_t pid;
