@@ -25,7 +25,7 @@ struct Reply{
 	int tid;
 	int dur;
 	int pl;
-}
+};
 
 bool readFlags(char **argv, int argc, struct FLAGS* flags);	//reads flags and checks if they are valid or not
 
