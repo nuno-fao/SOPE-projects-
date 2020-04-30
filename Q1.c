@@ -14,23 +14,26 @@ void *threadFunction(void *arg){
   char pvFifoname[256];
   clock_t execTime;
   pid_t pid;
-  int i, tid, dur, pl, pvfd;
+  int i, dur, pl, pvfd;
+  long unsigned int tid;
   struct Reply answer;
 
-  sscanf(request,"[%d, %d, %d, %d, %d]",&i, &pid, &tid, &dur, &pl);
+  sscanf(request,"[%d, %d, %ld, %d, %d]",&i, &pid, &tid, &dur, &pl);
 
   answer.i=i;
   answer.pid=getpid();
-  answer.tid=tid;
+  answer.tid=pthread_self();
   answer.dur=dur;
 
-  sprintf(pvFifoname, "/tmp/%d.%d", pid, tid);
+  sprintf(pvFifoname, "/tmp/%d.%ld", pid, tid);
   
-  pvfd = open(pvFifoname,O_WRONLY);   //open private fifo to answer the request
-  if(pvfd==-1){
-    perror("Error opening client fifo for the answer");
-    pthread_exit((void*) 1);
-  }
+  do{
+    pvfd = open(pvFifoname,O_WRONLY);   //open private fifo to answer the request
+    if(pvfd==-1){
+      usleep(100000);
+    }
+  }while(pvfd==-1);
+  
 
   if(elapsedTime(&startTime,&execTime)<totalTime){  //checks if bathroom is closed
     answer.pl=1;    //to be changed later
