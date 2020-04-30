@@ -8,20 +8,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-struct Register {
-    pid_t pid;
-    double instant;
-};
-
-void initRegisters();
-void structRegisterBegin(struct Register *registo);
-
-void writeCreateEvent(int argc, char *argv[]);
-void writeExitEvent(int exitStatus);
-void writeRecvSignalEvent(int signal);
-void writeSendSignalEvent(pid_t pid, int signal);
-void writeRecvPipeEvent(long int receivedMessage);
-void writeSendPipeEvent(long int sentMessage);
-void writeEntryEvent();
+void op_reg_message(int i, pid_t pid, pid_t tid, int dur, int pl, char *oper);
 
 #endif /*REG_H*/
