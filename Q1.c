@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include "funcs.h"
+#include "registers.h"
 
 clock_t startTime;
 int totalTime;
@@ -19,6 +20,8 @@ void *threadFunction(void *arg){
   struct Reply answer;
 
   sscanf(request,"[%d, %d, %ld, %d, %d]",&i, &pid, &tid, &dur, &pl);
+
+  op_reg_message(i, getpid(), tid, dur, pl, "RECVD");
 
   answer.i=i;
   answer.pid=getpid();
@@ -36,11 +39,14 @@ void *threadFunction(void *arg){
   
 
   if(elapsedTime(&startTime,&execTime)<totalTime){  //checks if bathroom is closed
+    op_reg_message(i, getpid(), tid, dur, 1, "ENTER");
     answer.pl=1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
     usleep(dur*1000);   //wait while client is using the bathroom
+    op_reg_message(i, getpid(), tid, dur, 1, "TIMUP");
   }
   else{
+    op_reg_message(i, getpid(), tid, dur, 1, "2LATE");
     answer.pl=-1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
   }
