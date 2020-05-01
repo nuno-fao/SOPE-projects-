@@ -73,7 +73,7 @@ int main(int argc, char **argv, char **envp)
   	i++;
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,NULL);
-    usleep(100000);
+    usleep(5000);
   }
   
   return 0;

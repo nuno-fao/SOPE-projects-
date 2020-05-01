@@ -18,7 +18,7 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	if(Un && (argc != 4)){
 		return true;
 	}
-	if(Qn && (argc != 8)){
+	if(Qn && (argc != 4)){
 		return true;
 	}
 

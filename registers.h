@@ -8,6 +8,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-void op_reg_message(int i, pid_t pid, pid_t tid, int dur, int pl, char *oper);
+void op_reg_message(double time, int i, pid_t pid, pid_t tid, int dur, int pl, char *oper);
 
 #endif /*REG_H*/
