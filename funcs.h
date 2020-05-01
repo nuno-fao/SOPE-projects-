@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <time.h>
+#include <sys/time.h>
 
 struct FLAGS{
 	int nsecs;
@@ -31,4 +32,4 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags);	//reads flags and ch
 
 void printFlags(struct FLAGS* flags);	//debug purposes
 
-double elapsedTime(time_t *start, time_t *now);	//start must have a value and now will be overwritten 
+double elapsedTime(struct timeval *start, struct timeval *now);	//start must have a value and now will be overwritten 

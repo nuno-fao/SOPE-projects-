@@ -6,14 +6,14 @@
 #include "funcs.h"
 #include "registers.h"
 
-clock_t startTime;
+struct timeval startTime;
 int totalTime;
 
 void *threadFunction(void *arg){
 
   char* request = (char *) arg;
   char pvFifoname[256];
-  clock_t execTime;
+  struct timeval execTime;
   pid_t pid;
   int i, dur, pl, pvfd;
   long unsigned int tid;
@@ -59,7 +59,7 @@ void *threadFunction(void *arg){
 int main(int argc, char **argv, char **envp)
 {
   struct FLAGS flags;
-  clock_t execTime;
+  struct timeval execTime;
   char request[256];
   int fd;
 
@@ -75,11 +75,11 @@ int main(int argc, char **argv, char **envp)
 
   fd = open(flags.fifoname, O_RDONLY | O_NONBLOCK);	//open fifo for reading
 
-  time(&startTime);	//initiate time counting
+  gettimeofday(&startTime,NULL);	//initiate time counting
   totalTime=flags.nsecs;
 
 
-  while ( elapsedTime(&startTime,&execTime) < flags.nsecs ) {
+  while ( elapsedTime(&startTime,&execTime) < (double)flags.nsecs ) {
   	while (read(fd, &request, 256) <= 0) {
       	usleep(5000);
   	}

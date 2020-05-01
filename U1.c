@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include "funcs.h"
 
-clock_t startTime;
+struct timeval startTime;
 int privFIFO;
 int i;
 
@@ -49,7 +49,7 @@ void *threadFunction(void *arg){
 int main(int argc, char **argv, char **envp)
 {
   struct FLAGS flags;
-  clock_t execTime;
+  struct timeval execTime;
 
   i=0;
 
@@ -67,9 +67,9 @@ int main(int argc, char **argv, char **envp)
   	}
   }while(privFIFO==-1);
 
-  time(&startTime);
+  gettimeofday(&startTime,NULL);
 
-  while ( elapsedTime(&startTime,&execTime) < flags.nsecs ) {
+  while ( elapsedTime(&startTime,&execTime) < (double)flags.nsecs ) {
   	i++;
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,NULL);

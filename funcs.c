@@ -63,7 +63,10 @@ void printFlags(struct FLAGS* flags){
 	printf("fifoname = %s\n",flags->fifoname);
 }
 
-double elapsedTime(time_t *start, time_t *now){
-	time(now);
-	return difftime(*now,*start);
+double elapsedTime(struct timeval *start, struct timeval *now){
+	struct timeval result;
+	gettimeofday(now,NULL);
+	timersub(now,start,&result);
+
+	return (double)((double)result.tv_sec + (double)result.tv_usec/1000000);
 }
