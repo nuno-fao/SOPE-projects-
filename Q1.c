@@ -33,7 +33,7 @@ void *threadFunction(void *arg){
   do{
     pvfd = open(pvFifoname,O_WRONLY);   //open private fifo to answer the request
     if(pvfd==-1){
-      usleep(100000);
+      usleep(5000);
     }
   }while(pvfd==-1);
   
@@ -81,7 +81,7 @@ int main(int argc, char **argv, char **envp)
 
   while ( elapsedTime(&startTime,&execTime) < flags.nsecs ) {
   	while (read(fd, &request, 256) <= 0) {
-      	usleep(10000);
+      	usleep(5000);
   	}
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,&request);
