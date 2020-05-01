@@ -3,15 +3,22 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "funcs.h"
+#include "registers.h"
 
 struct timeval startTime;
 int privFIFO;
+int totalTime;
 int i;
 
 void *threadFunction(void *arg){
 
   int publicFIFO, wcTime;
+  struct timeval execTime;
+  struct stat statbuf;
   char pubFIFOPath[256];
   char request[256];
   struct Reply reply;
@@ -30,14 +37,28 @@ void *threadFunction(void *arg){
   }
 
   sprintf(request,"[ %d, %d, %lu, %d, -1 ]", i, getpid(), pthread_self(), wcTime);
-  if(write(privFIFO,&request,sizeof(request))==-1){
-  	perror("Error writing client request to private fifo");
-  	exit(1);
+
+  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
+
+  if(fstat(privFIFO,&statbuf)==-1){
+  	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "CLOSD");
+  	return NULL;
+  }
+  else{
+  	write(privFIFO,&request,sizeof(request));
+  }
+  
+  while(read(publicFIFO,&reply,sizeof(reply))<=0){
+  	usleep(5000);
+  	if(elapsedTime(&startTime,&execTime) >= totalTime){
+          op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+          close(publicFIFO);
+          unlink(pubFIFOPath);
+          return NULL;
+       }
   }
 
-  while(read(publicFIFO,&reply,sizeof(reply))<=0){
-  	usleep(10000);
-  }
+  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IAMIN");
 
   close(publicFIFO);
   unlink(pubFIFOPath);
@@ -60,6 +81,8 @@ int main(int argc, char **argv, char **envp)
     exit(1);
   }
 
+  totalTime = flags.nsecs;
+
   do{
   	privFIFO = open(flags.fifoname,O_WRONLY);
   	if(privFIFO==-1){
@@ -73,9 +96,11 @@ int main(int argc, char **argv, char **envp)
   	i++;
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,NULL);
+  	pthread_detach(tid);
     usleep(5000);
   }
   
+  close(privFIFO);
   return 0;
   
 }
