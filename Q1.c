@@ -35,6 +35,11 @@ void *threadFunction(void *arg){
     if(pvfd==-1){
       usleep(5000);
     }
+    if(elapsedTime(&startTime,&execTime)>=totalTime){
+      op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "GAVUP");
+      close(pvfd);
+      return NULL;
+    }
   }while(pvfd==-1);
   
 
@@ -82,13 +87,20 @@ int main(int argc, char **argv, char **envp)
   while ( elapsedTime(&startTime,&execTime) < (double)flags.nsecs ) {
   	while (read(fd, &request, 256) <= 0) {
       	usleep(5000);
+        if(elapsedTime(&startTime,&execTime) >= (double)flags.nsecs){
+          close(fd);
+          unlink(flags.fifoname);
+          pthread_exit((void*)0);
+        }
   	}
   	pthread_t tid;
   	pthread_create(&tid,NULL,threadFunction,&request);
+    pthread_detach(tid);
   }
 
   close(fd);
   unlink(flags.fifoname);
+  pthread_exit((void*)0);
   
   return 0;
   
