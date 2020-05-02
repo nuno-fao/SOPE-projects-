@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <sys/syscall.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -24,9 +25,12 @@ void *threadFunction(void *arg){
   char request[256];
   struct Reply reply;
 
+  pid_t tid;
+  tid = syscall(SYS_gettid);
+
   wcTime=(rand()%(10 - 1 + 1))+1;
 
-  sprintf(privFIFOPath, "/tmp/%d.%ld", getpid(), pthread_self());
+  sprintf(privFIFOPath, "/tmp/%d.%d", getpid(), tid);
   if(mkfifo(privFIFOPath,0660)==-1){
   	perror("Error creating public fifo for client");
   	exit(1);
@@ -37,9 +41,9 @@ void *threadFunction(void *arg){
   	exit(1);
   }
 
-  sprintf(request,"[ %d, %d, %lu, %d, -1 ]", i, getpid(), pthread_self(), wcTime);
+  sprintf(request,"[ %d, %d, %d, %d, -1 ]", i, getpid(), tid, wcTime);
 
-  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
+  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, wcTime, -1, "IWANT");
   write(pubFIFO,request,sizeof(request));
 
   signal(SIGPIPE, SIG_IGN);
@@ -49,14 +53,14 @@ void *threadFunction(void *arg){
 	    usleep(10000);
 	    counter++;
 	}
-	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
+	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), tid, reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
 	if(reply.pl==0){
-		op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+		op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, wcTime, -1, "FAILD");
 	}
 	
    } 
    else {
-   	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+   	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, wcTime, -1, "FAILD");
     }
 
 

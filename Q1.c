@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <sys/syscall.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -17,18 +18,20 @@ void *threadFunction(void *arg){
   struct timeval execTime;
   pid_t pid;
   int i, dur, pl, pvfd;
-  long unsigned int tid;
   struct Reply answer;
 
-  sscanf(request,"[%d, %d, %ld, %d, %d]",&i, &pid, &tid, &dur, &pl);
+  pid_t tid;
+  tid = syscall(SYS_gettid);
+
+  sscanf(request,"[%d, %d, %d, %d, %d]",&i, &pid, &tid, &dur, &pl);
 
   op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, pl, "RECVD");
 
   answer.i=i;
   answer.pid=getpid();
-  answer.tid=pthread_self();
+  answer.tid=tid;
   answer.dur=dur;
-  sprintf(pvFifoname, "/tmp/%d.%ld", pid, tid);
+  sprintf(pvFifoname, "/tmp/%d.%d", pid, tid);
   
   do{
     pvfd = open(pvFifoname,O_WRONLY);   //open private fifo to answer the request
