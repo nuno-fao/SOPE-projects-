@@ -22,7 +22,7 @@ void *threadFunction(void *arg){
 
   sscanf(request,"[%d, %d, %ld, %d, %d]",&i, &pid, &tid, &dur, &pl);
 
-  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, pl, "RECVD");
+  op_reg_message(time(NULL), i, getpid(), tid, dur, pl, "RECVD");
 
   answer.i=i;
   answer.pid=getpid();
@@ -36,7 +36,7 @@ void *threadFunction(void *arg){
       usleep(5000);
     }
     if(elapsedTime(&startTime,&execTime)>=totalTime){
-      op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "GAVUP");
+      op_reg_message(time(NULL), i, getpid(), tid, dur, 1, "GAVUP");
       close(pvfd);
       return NULL;
     }
@@ -45,14 +45,14 @@ void *threadFunction(void *arg){
   
 
   if(elapsedTime(&startTime,&execTime)<totalTime){  //checks if bathroom is closed
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "ENTER");
+    op_reg_message(time(NULL), i, getpid(), tid, dur, 1, "ENTER");
     answer.pl=1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
     usleep(dur*1000);   //wait while client is using the bathroom
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "TIMUP");
+    op_reg_message(time(NULL), i, getpid(), tid, dur, 1, "TIMUP");
   }
   else{
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, -1, "2LATE");
+    op_reg_message(time(NULL), i, getpid(), tid, dur, -1, "2LATE");
     answer.pl=-1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
   }

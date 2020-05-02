@@ -39,7 +39,7 @@ void *threadFunction(void *arg){
 
   sprintf(request,"[ %d, %d, %lu, %d, -1 ]", i, getpid(), pthread_self(), wcTime);
 
-  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
+  op_reg_message(time(NULL), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
   write(pubFIFO,request,sizeof(request));
 
   signal(SIGPIPE, SIG_IGN);
@@ -49,14 +49,14 @@ void *threadFunction(void *arg){
 	    usleep(10000);
 	    counter++;
 	}
-	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
+	op_reg_message(time(NULL), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
 	if(reply.pl==0){
-		op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+		op_reg_message(time(NULL), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
 	}
 	
    } 
    else {
-   	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+   	op_reg_message(time(NULL), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
     }
 
 
