@@ -6,32 +6,33 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include "funcs.h"
 #include "registers.h"
 
 struct timeval startTime;
-int privFIFO;
+int pubFIFO;
+char* fifoname;
 int totalTime;
 int i;
 
 void *threadFunction(void *arg){
 
-  int publicFIFO, wcTime;
+  int privFIFO, wcTime;
   struct timeval execTime;
-  struct stat statbuf;
-  char pubFIFOPath[256];
+  char privFIFOPath[256];
   char request[256];
   struct Reply reply;
 
   wcTime=(rand()%(10 - 1 + 1))+1;
 
-  sprintf(pubFIFOPath, "/tmp/%d.%ld", getpid(), pthread_self());
-  if(mkfifo(pubFIFOPath,0660)==-1){
+  sprintf(privFIFOPath, "/tmp/%d.%ld", getpid(), pthread_self());
+  if(mkfifo(privFIFOPath,0660)==-1){
   	perror("Error creating public fifo for client");
   	exit(1);
   }
-  publicFIFO=open(pubFIFOPath,O_RDONLY|O_NONBLOCK);
-  if(publicFIFO==-1){
+  privFIFO=open(privFIFOPath,O_RDONLY|O_NONBLOCK);
+  if(privFIFO==-1){
   	perror("Error opening public fifo for client");
   	exit(1);
   }
@@ -39,29 +40,28 @@ void *threadFunction(void *arg){
   sprintf(request,"[ %d, %d, %lu, %d, -1 ]", i, getpid(), pthread_self(), wcTime);
 
   op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
+  write(pubFIFO,request,sizeof(request));
 
-  if(fstat(privFIFO,&statbuf)==-1){
-  	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "CLOSD");
-  	return NULL;
-  }
-  else{
-  	write(privFIFO,&request,sizeof(request));
-  }
-  
-  while(read(publicFIFO,&reply,sizeof(reply))<=0){
-  	usleep(5000);
-  	if(elapsedTime(&startTime,&execTime) >= totalTime){
-          op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
-          close(publicFIFO);
-          unlink(pubFIFOPath);
-          return NULL;
-       }
-  }
+  signal(SIGPIPE, SIG_IGN);
+  if (access(fifoname, F_OK) != -1) {
+	int counter = 0;
+	while (read(privFIFO, &reply, sizeof(reply)) <= 0 && counter < 5) {
+	    usleep(10000);
+	    counter++;
+	}
+	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
+	if(reply.pl==0){
+		op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+	}
+	
+   } 
+   else {
+   	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+    }
 
-  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IAMIN");
 
-  close(publicFIFO);
-  unlink(pubFIFOPath);
+  close(privFIFO);
+  unlink(privFIFOPath);
 
 
   return NULL;
@@ -82,13 +82,15 @@ int main(int argc, char **argv, char **envp)
   }
 
   totalTime = flags.nsecs;
+  fifoname = flags.fifoname;
 
-  do{
-  	privFIFO = open(flags.fifoname,O_WRONLY);
-  	if(privFIFO==-1){
-  		usleep(500000);
-  	}
-  }while(privFIFO==-1);
+  do {
+        pubFIFO = open(flags.fifoname, O_WRONLY);
+        if (pubFIFO == -1) {
+            
+            usleep(500000);
+        }
+    } while(pubFIFO == -1);
 
   gettimeofday(&startTime,NULL);
 
@@ -100,7 +102,6 @@ int main(int argc, char **argv, char **envp)
     usleep(5000);
   }
   
-  close(privFIFO);
   return 0;
   
 }

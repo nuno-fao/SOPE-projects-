@@ -8,6 +8,7 @@
 
 struct timeval startTime;
 int totalTime;
+int realPL;
 
 void *threadFunction(void *arg){
 
@@ -27,7 +28,6 @@ void *threadFunction(void *arg){
   answer.pid=getpid();
   answer.tid=pthread_self();
   answer.dur=dur;
-
   sprintf(pvFifoname, "/tmp/%d.%ld", pid, tid);
   
   do{
@@ -41,6 +41,7 @@ void *threadFunction(void *arg){
       return NULL;
     }
   }while(pvfd==-1);
+
   
 
   if(elapsedTime(&startTime,&execTime)<totalTime){  //checks if bathroom is closed
@@ -51,7 +52,7 @@ void *threadFunction(void *arg){
     op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "TIMUP");
   }
   else{
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "2LATE");
+    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, -1, "2LATE");
     answer.pl=-1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
   }
@@ -67,6 +68,7 @@ int main(int argc, char **argv, char **envp)
   struct timeval execTime;
   char request[256];
   int fd;
+  realPL = 0;
 
   if(readFlags(argv,argc, &flags)){		//reads arguments passed on function call
   	write(STDOUT_FILENO,"Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n",strlen("Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n"));
@@ -94,6 +96,7 @@ int main(int argc, char **argv, char **envp)
         }
   	}
   	pthread_t tid;
+    realPL++;
   	pthread_create(&tid,NULL,threadFunction,&request);
     pthread_detach(tid);
   }
