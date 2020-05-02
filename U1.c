@@ -44,10 +44,10 @@ void *threadFunction(void *arg){
 
   signal(SIGPIPE, SIG_IGN);
   if (access(fifoname, F_OK) != -1) {
-	int counter = 0;
-	while (read(privFIFO, &reply, sizeof(reply)) <= 0 && counter < 5) {
+	int ct = 0;
+	while (read(privFIFO, &reply, sizeof(reply)) <= 0 && ct < 5) {
 	    usleep(10000);
-	    counter++;
+	    ct++;
 	}
 	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
 	if(reply.pl==0){
