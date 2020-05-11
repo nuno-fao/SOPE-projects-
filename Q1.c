@@ -74,6 +74,7 @@ int main(int argc, char **argv, char **envp)
   	write(STDOUT_FILENO,"Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n",strlen("Bad arguments. Usage: Qn <-t nsecs> [-l nplaces] [-n nthreads] fifoname\n"));
     exit(1);
   }
+  
 
   if(mkfifo(flags.fifoname,0660)==-1){		//create fifo given in the arguments
   	perror("Error making fifo");

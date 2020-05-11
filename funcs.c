@@ -15,13 +15,6 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 		Un=true;
 	}
 
-	if(Un && (argc != 4)){
-		return true;
-	}
-	if(Qn && (argc != 4)){
-		return true;
-	}
-
 	flags->nsecs=flags->nplaces=flags->nthreads=0;
 	flags->fifoname="";
 
