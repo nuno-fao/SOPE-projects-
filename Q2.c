@@ -9,8 +9,11 @@
 struct timeval startTime;
 int totalTime;
 int realPL;
+int totalstalls;
+char* argu= 'test';
 
-void *threadFunction(void *arg){
+
+void *threadFunction(void *arg, int stalls[], int totalSt ){
 
   char* request = (char *) arg;
   char pvFifoname[256];
@@ -29,6 +32,7 @@ void *threadFunction(void *arg){
   answer.tid=pthread_self();
   answer.dur=dur;
   sprintf(pvFifoname, "/tmp/%d.%ld", pid, tid);
+  int stallnumber=0; 
   
   do{
     pvfd = open(pvFifoname,O_WRONLY);   //open private fifo to answer the request
@@ -36,7 +40,7 @@ void *threadFunction(void *arg){
       usleep(5000);
     }
     if(elapsedTime(&startTime,&execTime)>=totalTime){
-      op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "GAVUP");
+      op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, -1, "GAVUP");
       close(pvfd);
       return NULL;
     }
@@ -44,12 +48,14 @@ void *threadFunction(void *arg){
 
   
 
-  if(elapsedTime(&startTime,&execTime)<totalTime){  //checks if bathroom is closed
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "ENTER");
+  if( ( (elapsedTime(&startTime,&execTime)<totalTime)) || checkstallvacancy(stalls, totalSt)){  //checks if bathroom is closed
+    stallnumber=checkstallvacancy(stalls, totalSt);
+    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, stallnumber, "ENTER");
     answer.pl=1;    //to be changed later
     write(pvfd,&answer,sizeof(answer));   //answer the client
     usleep(dur*1000);   //wait while client is using the bathroom
-    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, 1, "TIMUP");
+    stalls[stallnumber]=0;     //stall becomes free after client uses bathroom
+    op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, stallnumber, "TIMUP");
   }
   else{
     op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), tid, dur, -1, "2LATE");
@@ -85,20 +91,27 @@ int main(int argc, char **argv, char **envp)
 
   gettimeofday(&startTime,NULL);	//initiate time counting
   totalTime=flags.nsecs;
+  realPL = flags.nthreads; //counter for available threads
+  totalstalls = flags.nplaces; //total stalls available
+  int stallgrid[totalstalls]; //array of stalls
+  memset(stallgrid, 0, sizeof(stallgrid)); //sets zero value to each stall, meaning unoccupied
 
 
-  while ( elapsedTime(&startTime,&execTime) < (double)flags.nsecs ) {
+
+
+
+  while ( ((elapsedTime(&startTime,&execTime) < (double)flags.nsecs )) || (realPL > 0)) {
   	while (read(fd, &request, 256) <= 0) {
       	usleep(5000);
-        if(elapsedTime(&startTime,&execTime) >= (double)flags.nsecs){
+        if( ((elapsedTime(&startTime,&execTime) >= (double)flags.nsecs)) || (realPL == 0)) {
           close(fd);
           unlink(flags.fifoname);
           pthread_exit((void*)0);
         }
   	}
   	pthread_t tid;
-    realPL++;
-  	pthread_create(&tid,NULL,threadFunction,&request);
+    realPL--;
+  	pthread_create(&tid,NULL,threadFunction(argu, stallgrid, totalstalls),&request);
     pthread_detach(tid);
   }
 

@@ -63,3 +63,18 @@ double elapsedTime(struct timeval *start, struct timeval *now){
 
 	return (double)((double)result.tv_sec + (double)result.tv_usec/1000000);
 }
+
+
+int checkstallvacancy(int stalls[], int total){
+
+	int x=0;
+	for(x=0;x<total;x++){
+		if (stalls[x] != -1){
+		return x; //returns stall number that was used
+		}
+
+		else
+		return -1; 
+	}
+
+}

@@ -33,3 +33,5 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags);	//reads flags and ch
 void printFlags(struct FLAGS* flags);	//debug purposes
 
 double elapsedTime(struct timeval *start, struct timeval *now);	//start must have a value and now will be overwritten 
+
+int checkstallvacancy(int stalls[],int total); //will return number of first available stall, -1 if none
