@@ -11,97 +11,105 @@
 #include "registers.h"
 
 struct timeval startTime;
-int pubFIFO;
-char* fifoname;
-int totalTime;
-int i;
+int i=0;
 
-void *threadFunction(void *arg){
 
-  int privFIFO, wcTime;
-  struct timeval execTime;
-  char privFIFOPath[256];
-  char request[256];
-  struct Reply reply;
+int server;
+struct timespec start;
 
-  wcTime=(rand()%(10 - 1 + 1))+1;
+void* thread_function(void* arg) {
 
-  sprintf(privFIFOPath, "/tmp/%d.%ld", getpid(), pthread_self());
-  if(mkfifo(privFIFOPath,0660)==-1){
-  	perror("Error creating public fifo for client");
-  	exit(1);
+    struct timeval execTime;
+    pthread_t tid;
+    pthread_detach(tid = pthread_self());
+
+    comms_t request;
+    memcpy(&request, ((comms_t*) arg), sizeof(comms_t));
+
+    request.tid = tid;
+    request.pid = getpid();
+
+    char privFIFOPath[256];
+    sprintf(privFIFOPath, "/tmp/%d.%ld", getpid(), tid);
+
+    if (mkfifo(privFIFOPath, 0660) != 0) {
+        perror("Error Creating fifo");
+        exit(1);
+    }
+
+    write(server, &request, sizeof(comms_t));
+
+    int user;
+    if ((user = open(privFIFOPath, O_RDONLY)) < 0) {
+        char* error = (char*) malloc (128 * sizeof(char));
+        sprintf(error, "Cannot open FIFO %d ", request.i);
+        perror(error);
+        free(error);
+        op_reg_message(elapsedTime(&startTime,&execTime),request.i, request.pid, request.tid, request.dur, request.pl, "FAILD");
+
+        if (unlink(privFIFOPath) < 0) { perror("Error Unlinking FIFO"); }
+        return NULL;
+    }
+
+    op_reg_message(elapsedTime(&startTime,&execTime),request.i, request.pid, request.tid, request.dur, request.pl, "IWANT");
+
+    int ct = 0;
+    comms_t reply;
+    
+    while (read(user, &reply, sizeof(comms_t)) <= 0 && ct < 15) {
+        usleep(10000);
+        ct++;
+    }
+    if (ct == 15) {
+        op_reg_message(elapsedTime(&startTime,&execTime),request.i, request.pid, request.tid, request.dur, request.pl, "FAILD");
+        close(user);
+        if (unlink(privFIFOPath) < 0) { perror("Error Unlinking FIFO"); }
+        return NULL;
+    }
+    
+    op_reg_message(elapsedTime(&startTime,&execTime),reply.i, getpid(), tid, reply.dur, reply.pl, (reply.pl == -1) ? "CLOSD" : "IAMIN");
+
+    if (unlink(privFIFOPath) < 0) { perror("Error Unlinking FIFO"); }
+    close(user);
+    return NULL;
+}
+
+
+int main(int argc, char** argv) {
+
+    int WcTime=0;
+
+  if (argc != 4) {
+        write(STDOUT_FILENO,"Bad arguments. Usage: Un <-t nsecs> fifoname\n", strlen("Bad arguments. Usage: Un <-t nsecs> fifoname\n"));
+        exit(1);
   }
-  privFIFO=open(privFIFOPath,O_RDONLY|O_NONBLOCK);
-  if(privFIFO==-1){
-  	perror("Error opening public fifo for client");
-  	exit(1);
-  }
 
-  sprintf(request,"[ %d, %d, %lu, %d, -1 ]", i, getpid(), pthread_self(), wcTime);
+    Uflags_t args = save_Uflags(argv);
+    
+    do {
+        server = open(args.fifoname, O_WRONLY);
+        if (server == -1) {
+            printf("Waiting for Q2\n");
+            sleep(1);
+        }
+    } while(server == -1);
+    
 
-  op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "IWANT");
-  write(pubFIFO,request,sizeof(request));
+    int request_i = 0;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  signal(SIGPIPE, SIG_IGN);
-  if (access(fifoname, F_OK) != -1) {
-	int ct = 0;
-	while (read(privFIFO, &reply, sizeof(reply)) <= 0 && ct < 5) {
-	    usleep(10000);
-	    ct++;
-	}
-	op_reg_message(elapsedTime(&startTime,&execTime), reply.i, getpid(), pthread_self(), reply.dur, reply.pl, ((reply.pl != -1)&& (reply.pl != 0))? "IAMIN" : "CLOSD");
-	if(reply.pl==0){
-		op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
-	}
-	
-   } 
-   else {
-   	op_reg_message(elapsedTime(&startTime,&execTime), i, getpid(), pthread_self(), wcTime, -1, "FAILD");
+    while (timer() < (args.nsecs * 1000)) {
+        pthread_t tid;
+        comms_t request;
+        WcTime = (rand() % (100 - 30 + 1)) + 30;
+        request.dur = WcTime;
+        request.i = request_i++;
+        request.pl = -1;
+
+        pthread_create(&tid, NULL, thread_function, &request);
+        usleep(50000); 
     }
 
 
-  close(privFIFO);
-  unlink(privFIFOPath);
-
-
-  return NULL;
-}
-
-int main(int argc, char **argv, char **envp)
-{
-  struct FLAGS flags;
-  struct timeval execTime;
-
-  i=0;
-
-  srand(time(NULL));
-
-  if(readFlags(argv,argc, &flags)){
-  	write(STDOUT_FILENO,"Bad arguments. Usage: Un <-t nsecs> fifoname\n", strlen("Bad arguments. Usage: Un <-t nsecs> fifoname\n"));
-    exit(1);
-  }
-
-  totalTime = flags.nsecs;
-  fifoname = flags.fifoname;
-
-  do {
-        pubFIFO = open(flags.fifoname, O_WRONLY);
-        if (pubFIFO == -1) {
-            
-            usleep(500000);
-        }
-    } while(pubFIFO == -1);
-
-  gettimeofday(&startTime,NULL);
-
-  while ( elapsedTime(&startTime,&execTime) < (double)flags.nsecs ) {
-  	i++;
-  	pthread_t tid;
-  	pthread_create(&tid,NULL,threadFunction,NULL);
-  	pthread_detach(tid);
-    usleep(5000);
-  }
-  
-  return 0;
-  
+    exit(0);
 }

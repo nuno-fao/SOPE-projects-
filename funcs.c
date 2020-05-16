@@ -49,11 +49,39 @@ bool readFlags(char **argv, int argc, struct FLAGS* flags){
 	return false; //read flags with no errors
 }
 
-void printFlags(struct FLAGS* flags){
-	printf("nsecs = %i\n",flags->nsecs);
-	printf("nplaces = %i\n",flags->nplaces);
-	printf("nthreads = %i\n",flags->nthreads);
-	printf("fifoname = %s\n",flags->fifoname);
+
+Uflags_t save_Uflags(char **argv) {
+    Uflags_t Uflags;
+
+    Uflags.nsecs = atoi(argv[2]);
+    Uflags.fifoname = argv[3];
+
+    return Uflags;
+}
+
+Qflags_t save_Qflags(int argc, char **argv) {
+    
+    Qflags_t Qflags;
+
+    Qflags.nthreads = 0; 
+	Qflags.nplaces = 0;
+    Qflags.nsecs = atoi(argv[2]);
+    Qflags.nplaces = 0;
+    Qflags.nthreads = 0;
+
+    for (int i = 3; i < argc-1; i++) {
+        if (strcmp("-l", argv[i]) == 0)
+            Qflags.nplaces = atoi(argv[++i]);
+        else if (strcmp("-n", argv[i]) == 0)
+            Qflags.nthreads = atoi(argv[++i]);
+    }
+
+
+    Qflags.fifoname = argv[argc-1];
+
+
+    return Qflags;
+	
 }
 
 double elapsedTime(struct timeval *start, struct timeval *now){
@@ -64,17 +92,55 @@ double elapsedTime(struct timeval *start, struct timeval *now){
 	return (double)((double)result.tv_sec + (double)result.tv_usec/1000000);
 }
 
-
-int checkstallvacancy(int stalls[], int total){
-
-	int x=0;
-	for(x=0;x<total;x++){
-		if (stalls[x] != -1){
-		return x; //returns stall number that was used
-		}
-
-		else
-		return -1; 
-	}
-
+double timer() {
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    return (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_nsec - start.tv_nsec) / 1000000.0;
 }
+
+stalls_t create_stalls(int max_size) {
+    stalls_t stalls;
+    stalls.size = 0;
+    stalls.max_size = max_size;
+    stalls.top = 0;
+    stalls.bottom = max_size - 1;
+    stalls.queue = (int*) malloc(max_size * sizeof(int));
+    return stalls;
+}
+
+int full(stalls_t* stalls) {
+    return stalls->size == stalls->max_size;
+}
+
+int empty(stalls_t* stalls) {
+    return stalls->size == 0;
+}
+
+int push(stalls_t* stalls, int val) {
+    if (!full(stalls)) {
+        stalls->bottom = (stalls->bottom + 1) % stalls->max_size;
+        stalls->queue[stalls->bottom] = val;
+        stalls->size++;
+        return 0;
+    }
+    return 1;
+}
+
+int pop_top(stalls_t* stalls) {
+    int value = -1;
+    if (!empty(stalls)) {
+        value = stalls->queue[stalls->top];
+        stalls->top = (stalls->top + 1) % stalls->max_size;
+        stalls->size--;
+    }
+    return value;
+}
+
+int pack(stalls_t* stalls) {
+    for (int i = 1; i <= stalls->max_size; i++) {
+        if (push(stalls, i) != 0)
+            return 1;
+    }
+    return 0;
+}
+
